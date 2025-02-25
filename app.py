@@ -33,7 +33,7 @@ try:
     # Fetch already existing Persian dates from the database
     existing_dates = set()
     with connection.cursor() as cursor:
-        cursor.execute("SELECT persian_date FROM cafebazaar;")
+        cursor.execute("SELECT date FROM cafebazaar;")
         existing_dates = {row[0] for row in cursor.fetchall()}
 
     print(f"Found {len(existing_dates)} existing records in the database.")
@@ -69,34 +69,34 @@ try:
 
         # Insert active_install data
         for i in range(len(dates_active)):
-            persian_date = dates_active[i]  
-            if persian_date in existing_dates:
+            date = dates_active[i]  
+            if date in existing_dates:
                 continue  # Skip already imported dates
             active_install = active_install_data[i]
-            install_data[persian_date] = {'active_install': active_install, 'new_install': None}
+            install_data[date] = {'active_install': active_install, 'new_install': None}
 
         # Insert new_install data
         for i in range(len(dates_new)):
-            persian_date = dates_new[i]  
-            if persian_date in existing_dates:
+            date = dates_new[i]  
+            if date in existing_dates:
                 continue  # Skip already imported dates
             new_install = new_install_data[i]
-            if persian_date in install_data:
-                install_data[persian_date]['new_install'] = new_install
+            if date in install_data:
+                install_data[date]['new_install'] = new_install
             else:
-                install_data[persian_date] = {'active_install': None, 'new_install': new_install}
+                install_data[date] = {'active_install': None, 'new_install': new_install}
 
         # Insert new data into PostgreSQL
         with connection.cursor() as cursor:
-            for persian_date, values in install_data.items():
+            for date, values in install_data.items():
                 active_install = values['active_install']
                 new_install = values['new_install']
 
                 query = """
-                INSERT INTO cafebazaar (persian_date, active_install, new_install)
+                INSERT INTO cafebazaar (date, active_install, new_install)
                 VALUES (%s, %s, %s);
                 """
-                cursor.execute(query, (persian_date, active_install, new_install))
+                cursor.execute(query, (date, active_install, new_install))
 
             # Commit the changes
             connection.commit()
